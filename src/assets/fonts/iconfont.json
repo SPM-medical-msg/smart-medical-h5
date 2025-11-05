@@ -1,0 +1,44 @@
+{
+  "id": "4659530",
+  "name": "chat",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "654295",
+      "name": "笑脸",
+      "font_class": "xiaolian",
+      "unicode": "e627",
+      "unicode_decimal": 58919
+    },
+    {
+      "icon_id": "2076242",
+      "name": " 图片",
+      "font_class": "tupian",
+      "unicode": "e889",
+      "unicode_decimal": 59529
+    },
+    {
+      "icon_id": "5111481",
+      "name": "麦克风-空",
+      "font_class": "maikefeng-kong",
+      "unicode": "e698",
+      "unicode_decimal": 59032
+    },
+    {
+      "icon_id": "7594806",
+      "name": "24gl-folderOpen",
+      "font_class": "24gl-folderOpen",
+      "unicode": "eabe",
+      "unicode_decimal": 60094
+    },
+    {
+      "icon_id": "18211374",
+      "name": "剪刀 剪切",
+      "font_class": "jiandaojianqie",
+      "unicode": "e7b0",
+      "unicode_decimal": 59312
+    }
+  ]
+}
