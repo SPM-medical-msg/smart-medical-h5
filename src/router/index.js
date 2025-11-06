@@ -24,6 +24,12 @@ const routes = [
       import(/* webpackChunkName: "login" */ "@/views/Register.vue"),
     meta: { title: "注册" },
   },
+  {
+    path: "/doctor-detail",
+    component: () =>
+      import(/* webpackChunkName: "login" */ "@/views/DoctorDetail.vue"),
+    meta: { title: "医生详情" },
+  },
 ];
 
 const router = createRouter({
