@@ -197,8 +197,7 @@ export const useUserStore = defineStore(
      */
     const checkLogin = () => {
       const hasToken =
-        sessionStorage.getItem("Authorization") ||
-        localStorage.getItem("Authorization");
+        sessionStorage.getItem("userId") || localStorage.getItem("userId");
       return !!(userInfo.value && hasToken);
     };
 

@@ -1,3 +1,4 @@
+// vite.config.js
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import Components from "unplugin-vue-components/vite";
@@ -20,36 +21,38 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  // ==================== Buffer 兼容配置（MQTT需要） ====================
+  define: {
+    global: "globalThis",
+  },
+  optimizeDeps: {
+    include: ["buffer", "mqtt/dist/mqtt.min"],
+  },
   css: {
     // SCSS 预处理器配置
     preprocessorOptions: {
       scss: {
-        api: "modern-compiler", // 使用现代编译器API（提升性能）
-        // 全局引入 SCSS 变量和混入（如果需要的话）
-        // additionalData: `
-        //   @use "@/styles/variables.scss" as *;
-        // `,
-        // 如果不需要全局引入，可以注释掉 additionalData
+        api: "modern-compiler",
       },
     },
-    // PostCSS 配置（保留原有的 px 转 vw）
+    // PostCSS 配置（px 转 vw）
     postcss: {
       plugins: [
         require("postcss-px-to-viewport-8-plugin")({
-          viewportWidth: 375, // 设计稿宽度
-          viewportHeight: 667, // 设计稿高度（可选）
-          unitPrecision: 5, // 转换后保留的小数位数
-          viewportUnit: "vw", // 使用的视口单位
-          selectorBlackList: [".ignore", ".hairlines"], // 不转换的类名
-          minPixelValue: 1, // 小于1px不转换
-          mediaQuery: false, // 允许媒体查询中转换
-          exclude: [/node_modules/], // 排除node_modules
+          viewportWidth: 375,
+          viewportHeight: 667,
+          unitPrecision: 5,
+          viewportUnit: "vw",
+          selectorBlackList: [".ignore", ".hairlines"],
+          minPixelValue: 1,
+          mediaQuery: false,
+          exclude: [/node_modules/],
         }),
       ],
     },
   },
   server: {
-    host: true, // 添加这行支持内网访问
+    host: "0.0.0.0",
     port: 3000,
     open: true,
     proxy: {

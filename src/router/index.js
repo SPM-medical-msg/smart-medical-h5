@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useUserStore } from "../stores/index";
+import Layout from "@/layout/index.vue";
 
 const routes = [
   {
@@ -7,28 +8,86 @@ const routes = [
     redirect: "/home",
   },
   {
-    path: "/home",
-    name: "Home",
-    component: () => import("@/views/index.vue"),
-    meta: { title: "首页" },
-  },
-  {
     path: "/login",
-    component: () =>
-      import(/* webpackChunkName: "login" */ "@/views/Login.vue"),
+    component: () => import("@/views/Login.vue"),
     meta: { title: "登录" },
   },
   {
     path: "/register",
-    component: () =>
-      import(/* webpackChunkName: "login" */ "@/views/Register.vue"),
+    component: () => import("@/views/Register.vue"),
     meta: { title: "注册" },
   },
+  // 使用Layout布局的页面
   {
-    path: "/doctor-detail",
-    component: () =>
-      import(/* webpackChunkName: "login" */ "@/views/DoctorDetail.vue"),
-    meta: { title: "医生详情" },
+    path: "/",
+    component: Layout,
+    children: [
+      {
+        path: "/home",
+        name: "Home",
+        component: () => import("@/views/index.vue"),
+        meta: { title: "首页" },
+      },
+      {
+        path: "/doctor-detail",
+        component: () => import("@/views/DoctorDetail.vue"),
+        meta: { title: "医生详情" },
+      },
+      // {
+      //   path: "/doctor-list",
+      //   component: () => import("@/views/DoctorList.vue"),
+      //   meta: { title: "医生列表" },
+      // },
+      // {
+      //   path: "/consult",
+      //   component: () => import("@/views/Consult.vue"),
+      //   meta: { title: "在线咨询" },
+      // },
+      // {
+      //   path: "/knowledge",
+      //   component: () => import("@/views/Knowledge.vue"),
+      //   meta: { title: "健康知识" },
+      // },
+      {
+        path: "/person",
+        component: () => import("@/views/user/UserCenter.vue"),
+        meta: { title: "我的" },
+      },
+      {
+        path: "/index-order",
+        name: "OrderManagement",
+        component: () => import("@/views/order/OrderManagement.vue"),
+        meta: { title: "咨询管理", requireAuth: true },
+      },
+      // 聊天页面
+      {
+        path: "/chat",
+        name: "Chat",
+        component: () => import("@/views/chat/UserSingleChat.vue"),
+        meta: { title: "在线咨询", requireAuth: true },
+      },
+      {
+        path: "/index-order/detail",
+        name: "OrderDetail",
+        component: () => import("@/views/order/OrderDetail.vue"),
+        meta: { title: "订单详情", requireAuth: true },
+      },
+      // {
+      //   path: "/profile",
+      //   component: () => import("@/views/Profile.vue"),
+      //   meta: { title: "个人中心" },
+      // },
+      // {
+      //   path: "/my-consult",
+      //   component: () => import("@/views/MyConsult.vue"),
+      //   meta: { title: "我的咨询" },
+      // },
+      // {
+      //   path: "/history",
+      //   component: () => import("@/views/History.vue"),
+      //   meta: { title: "浏览记录" },
+      // },
+    ],
   },
 ];
 
@@ -37,24 +96,25 @@ const router = createRouter({
   routes,
 });
 
-// 路由守卫 - 设置页面标题
+// 路由守卫
 router.beforeEach((to, from, next) => {
+  // 设置页面标题
   if (to.meta.title) {
-    document.title = to.meta.title;
+    document.title = to.meta.title + " - 医讯通";
   }
 
-  if (
-    to.path === "/login" ||
-    to.path === "/register" ||
-    to.path === "/home" ||
-    to.path === "/detail"
-  ) {
+  // 公开页面，无需登录
+  const publicPages = ["/login", "/register", "/home", "/doctor-detail"];
+
+  if (publicPages.includes(to.path)) {
     next();
   } else {
+    // 需要登录的页面
     const userStore = useUserStore();
-    const token = userStore.userInfo;
-    if (!token) {
-      next("/home");
+
+    if (!userStore.checkLogin()) {
+      // 未登录，跳转到登录页
+      next("/login");
     } else {
       next();
     }

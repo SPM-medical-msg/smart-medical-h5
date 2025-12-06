@@ -9,12 +9,31 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@easydarwin/easyplayer": "^5.1.3",
+    "@kangc/v-md-editor": "^2.3.18",
+    "@videojs-player/vue": "^1.0.0",
+    "@vueuse/core": "^10.4.1",
     "axios": "^1.13.1",
+    "buffer": "^6.0.3",
+    "dayjs": "^1.11.9",
+    "echarts": "^4.9.0",
+    "highlight.js": "^11.11.1",
+    "js-audio-recorder": "^1.0.7",
+    "lodash": "latest",
+    "mitt": "^3.0.1",
+    "mqtt": "^4.3.7",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.7.1",
+    "prismjs": "^1.29.0",
+    "svg-sprite-loader": "^6.0.11",
     "vant": "^4.9.21",
+    "video.js": "^7.21.0",
     "vue": "^3.5.22",
+    "vue-aplayer-next": "^1.0.1",
+    "vue-puzzle-vcode": "^1.1.10",
     "vue-router": "^4.6.3",
+    "vue-video-player": "^5.0.2",
+    "vue3-danmaku": "^1.6.1",
     "vue3-puzzle-vcode": "^1.1.7"
   },
   "devDependencies": {
@@ -22,6 +41,7 @@
     "postcss-px-to-viewport-8-plugin": "^1.2.5",
     "sass": "^1.93.3",
     "sass-embedded": "^1.93.3",
+    "unplugin-auto-import": "^20.3.0",
     "unplugin-vue-components": "^30.0.0",
     "vite": "^7.1.7"
   }

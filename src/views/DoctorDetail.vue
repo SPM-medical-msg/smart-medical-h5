@@ -85,6 +85,7 @@
         <div class="evaluate-section">
           <EvaluateReplayMobile
             v-if="commentList.length > 0"
+            evaluateType="list"
             :comment-list="commentList"
             @reload-data="getEvaluateData"
           />
@@ -100,12 +101,21 @@
         block
         round
         size="large"
+        :loading="isSubmitting"
+        loading-text="处理中..."
         @click="handleConsult"
       >
         <van-icon name="chat-o" />
         向医生咨询
       </van-button>
     </div>
+
+    <!-- 订单支付弹窗 -->
+    <OrderPaymentDialogMobile
+      v-model:show="showPaymentDialog"
+      :order-info="currentOrder"
+      @payment-success="handlePaymentSuccess"
+    />
   </div>
 </template>
 
@@ -114,11 +124,15 @@ import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getUserList } from "@/api/user";
 import { getEvaluateList } from "@/api/evaluate";
-import { showDialog, showToast } from "vant";
+import { saveOrderInfo } from "@/api/order";
+import { useUserStore } from "@/stores";
+import { showDialog, showToast, showConfirmDialog } from "vant";
 import EvaluateReplayMobile from "@/components/EvaluateReplay/EvaluateReplayMobile.vue";
+import OrderPaymentDialogMobile from "@/components/OrderPayment/OrderPaymentDialogMobile.vue";
 
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
 
 // 响应式数据
 const doctor = ref({
@@ -134,6 +148,12 @@ const doctor = ref({
 
 const commentList = ref([]);
 const activeTab = ref(0);
+const form = ref({});
+
+// 支付相关
+const showPaymentDialog = ref(false);
+const currentOrder = ref({});
+const isSubmitting = ref(false);
 
 // 计算属性 - 将10分制转换为5分制用于显示
 const scoreDisplay = computed(() => {
@@ -177,20 +197,76 @@ const onClickLeft = () => {
   router.back();
 };
 
+// 创建订单信息
+const setOrderInfo = async () => {
+  try {
+    isSubmitting.value = true;
+
+    form.value.userId = userStore.userInfo.id;
+    form.value.doctorUserId = route.query.id;
+
+    const res = await saveOrderInfo(form.value);
+
+    // 设置订单信息
+    currentOrder.value = {
+      ...res.data,
+      doctorId: doctor.value.doctorId,
+      doctorRealName: doctor.value.realName,
+      deptName: doctor.value.deptName,
+      majorInfo: doctor.value.majorInfo,
+      doctorAvatar: doctor.value.imageUrl,
+      status: 1, // 待支付
+    };
+
+    // 显示支付弹窗
+    showPaymentDialog.value = true;
+  } catch (error) {
+    console.error("创建订单失败:", error);
+    showToast("创建订单失败，请稍后重试");
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
 // 咨询医生
-const handleConsult = () => {
-  showDialog({
+const handleConsult = async () => {
+  // 检查登录状态
+  if (!userStore.checkLogin()) {
+    showConfirmDialog({
+      title: "提示",
+      message: "请先登录后再进行咨询",
+      confirmButtonText: "去登录",
+      cancelButtonText: "取消",
+    })
+      .then(() => {
+        router.push("/login");
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // 确认咨询
+  showConfirmDialog({
     title: "提示",
-    message: "确定要向该医生发起咨询吗？",
+    message: "确定要联系医生？",
     confirmButtonText: "确定",
     confirmButtonColor: "#1989fa",
     cancelButtonText: "取消",
   })
-    .then(() => {
-      // TODO: 跳转到咨询页面或发起咨询
-      showToast("功能开发中...");
+    .then(async () => {
+      await setOrderInfo();
     })
     .catch(() => {});
+};
+
+// 支付成功回调
+const handlePaymentSuccess = () => {
+  showToast({
+    type: "success",
+    message: "支付成功，请等待医生联系",
+    duration: 2000,
+  });
+  // 可以刷新页面或跳转到订单列表
 };
 </script>
 
