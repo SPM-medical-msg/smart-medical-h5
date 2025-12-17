@@ -6,15 +6,12 @@ import router from "@/router";
 // const baseURL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:9001";
 // 动态获取baseURL
 const getBaseURL = () => {
-  // 开发环境
   if (import.meta.env.DEV) {
-    // 使用当前访问的主机地址
+    // 开发环境
     return `http://${window.location.hostname}:9001`;
-    // 或者使用环境变量
-    // return import.meta.env.VITE_API_BASE_URL;
   }
-  // 生产环境
-  return import.meta.env.VITE_API_BASE_URL || "/api";
+  // 生产环境 - 使用相对路径
+  return "";
 };
 const service = axios.create({
   baseURL: getBaseURL(),

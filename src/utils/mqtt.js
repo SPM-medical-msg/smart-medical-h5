@@ -28,20 +28,32 @@ const getBrokerHost = () => {
   }
 };
 
-// 连接配置
+// // 连接配置
+// const connection = reactive({
+//   protocol: "ws", // 注意：移动端浏览器必须用 ws/wss，不能用 tcp
+//   host: getBrokerHost(), // 🔥 这里调用动态获取方法
+//   port: 8083, // EMQX WebSocket 默认端口
+//   clientId: "mobile_" + Math.random().toString(16).substring(2, 8),
+//   username: "server",
+//   password: "password",
+//   clean: true,
+//   connectTimeout: 10 * 1000, // 缩短超时时间，移动端反应要快
+//   reconnectPeriod: 0, // 关闭库自带重连，使用我们要手写的智能重连
+//   keepalive: 60,
+// });
 const connection = reactive({
-  protocol: "ws", // 注意：移动端浏览器必须用 ws/wss，不能用 tcp
-  host: getBrokerHost(), // 🔥 这里调用动态获取方法
-  port: 8083, // EMQX WebSocket 默认端口
+  protocol: "ws",
+  // 动态获取当前访问的主机地址
+  host: window.location.hostname, // 改成动态获取
+  port: window.location.port || 80, // 如果没有端口就用80
   clientId: "mobile_" + Math.random().toString(16).substring(2, 8),
   username: "server",
   password: "password",
   clean: true,
-  connectTimeout: 10 * 1000, // 缩短超时时间，移动端反应要快
-  reconnectPeriod: 0, // 关闭库自带重连，使用我们要手写的智能重连
+  connectTimeout: 20 * 1000,
+  reconnectPeriod: 0,
   keepalive: 60,
 });
-
 // 连接状态管理
 const connectionState = ref({
   connected: false,

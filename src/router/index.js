@@ -59,6 +59,30 @@ const routes = [
         component: () => import("@/views/order/OrderManagement.vue"),
         meta: { title: "咨询管理", requireAuth: true },
       },
+      {
+        path: "/index-notice",
+        name: "NoticeList",
+        component: () => import("@/views/list/NoticeList.vue"),
+        meta: { title: "疾病知识", requireAuth: true },
+      },
+      {
+        path: "/notice-detail",
+        name: "NoticeDetail",
+        component: () => import("@/views/list/NoticeDetail.vue"),
+        meta: { title: "疾病详情", requireAuth: true },
+      },
+      {
+        path: "/index-mediciation",
+        name: "mediciationList",
+        component: () => import("@/views/list/DrugList.vue"),
+        meta: { title: "疾病知识", requireAuth: true },
+      },
+      {
+        path: "/mediciation-detail",
+        name: "DrugDetail",
+        component: () => import("@/views/list/DrugDetail.vue"),
+        meta: { title: "疾病详情", requireAuth: true },
+      },
       // 聊天页面
       {
         path: "/chat",

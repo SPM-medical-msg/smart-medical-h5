@@ -42,20 +42,6 @@
               />
             </van-cell-group>
 
-            <!-- <div class="form-footer">
-              <van-checkbox v-model="rememberMe" shape="square">
-                记住密码
-              </van-checkbox>
-              <van-button
-                type="default"
-                size="small"
-                plain
-                @click="toForgetPassword"
-              >
-                忘记密码？
-              </van-button>
-            </div> -->
-
             <div class="submit-btn">
               <van-button
                 round
@@ -102,6 +88,7 @@
                     size="small"
                     type="primary"
                     :disabled="!canSendCode"
+                    :loading="sendingCode"
                     @click="handleSendCode"
                   >
                     {{ codeBtnText }}
@@ -156,24 +143,12 @@
       @success="onVerifySuccess"
       @close="onVerifyClose"
     />
-    <!-- <van-popup
-      v-model:show="showVerify"
-      round
-      position="center"
-      :style="{ width: '90%', maxWidth: '400px' }"
-    >
-      <div class="verify-wrapper">
-        <h3>安全验证</h3>
-        <p>请完成下方验证</p>
-
-      </div>
-    </van-popup> -->
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import { showToast, showDialog, showLoadingToast, closeToast } from "vant";
+import { showToast, showSuccessToast, showFailToast } from "vant";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores";
 import { getUserByPhone, saveUserInfo } from "@/api/user";
@@ -210,6 +185,7 @@ const phoneForm = ref({
 
 // 状态管理
 const loading = ref(false);
+const sendingCode = ref(false); // 新增：发送验证码loading状态
 const rememberMe = ref(false);
 const isFirstLogin = ref(false);
 const smsCode = ref("");
@@ -228,14 +204,18 @@ const currentVerifyType = ref(VerifyType.LOGIN);
 // 验证码按钮文本
 const codeBtnText = computed(() => {
   if (countdown.value > 0) {
-    return `${countdown.value}秒后重发`;
+    return `${countdown.value}s`;
   }
   return "获取验证码";
 });
 
 // 是否可以发送验证码
 const canSendCode = computed(() => {
-  return countdown.value === 0 && /^1[3-9]\d{9}$/.test(phoneForm.value.phone);
+  return (
+    countdown.value === 0 &&
+    /^1[3-9]\d{9}$/.test(phoneForm.value.phone) &&
+    !sendingCode.value
+  );
 });
 
 // Tab切换
@@ -262,7 +242,7 @@ const handlePhoneLogin = async () => {
 
     // 验证验证码
     if (smsCode.value !== phoneForm.value.code) {
-      showToast("验证码错误");
+      showFailToast("验证码错误");
       return;
     }
 
@@ -273,7 +253,7 @@ const handlePhoneLogin = async () => {
     }
   } catch (error) {
     console.error("登录失败:", error);
-    showToast(error.message || "登录失败");
+    showFailToast(error.message || "登录失败");
   } finally {
     loading.value = false;
   }
@@ -286,7 +266,7 @@ const handlePhoneInput = (value) => {
   }
 };
 
-// 发送验证码
+// 点击发送验证码按钮
 const handleSendCode = () => {
   if (!phoneForm.value.phone) {
     showToast("请输入手机号");
@@ -302,25 +282,71 @@ const handleSendCode = () => {
   showVerify.value = true;
 };
 
-// 发送短信验证码
+// ============== 核心修改：发送短信验证码 ==============
 const sendSmsCode = async () => {
   try {
+    sendingCode.value = true;
+
+    // 生成6位随机验证码
     smsCode.value = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // 开发环境显示验证码
-    if (process.env.NODE_ENV === "development") {
-      console.log(`【开发环境】验证码: ${smsCode.value}`);
-      showToast(`验证码: ${smsCode.value}`);
-    } else {
-      showToast("验证码已发送");
+    const requestBody = {
+      name: "推送助手",
+      code: smsCode.value,
+      targets: phoneForm.value.phone,
+    };
+
+    console.log("发送验证码:", smsCode.value, "到手机:", phoneForm.value.phone);
+
+    // 发送请求到推送服务
+    const response = await fetch("https://push.spug.cc/send/RNpZOmYvxVj59kPq", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    console.log("发送验证码请求:", requestBody);
+
+    const responseText = await response.text();
+    let result;
+
+    try {
+      result = JSON.parse(responseText);
+    } catch (e) {
+      console.error("响应解析失败:", responseText);
+      throw new Error("服务器响应格式错误");
     }
 
-    startCountdown();
-    await checkPhoneRegistered();
-    return true;
+    if (!response.ok) {
+      throw new Error(`请求失败: ${response.status}`);
+    }
+
+    if (result.code === 200) {
+      showSuccessToast("验证码已发送，请查收短信");
+
+      // 开发环境打印验证码方便调试
+      if (process.env.NODE_ENV === "development") {
+        console.log(`【开发环境】验证码: ${smsCode.value}`);
+      }
+
+      // 开始倒计时
+      startCountdown();
+
+      // 检查手机号是否已注册
+      await checkPhoneRegistered();
+
+      return true;
+    } else {
+      throw new Error(result.msg || "发送失败");
+    }
   } catch (error) {
-    showToast("验证码发送失败");
+    console.error("发送验证码失败:", error);
+    showFailToast(error.message || "验证码发送失败，请稍后重试");
     return false;
+  } finally {
+    sendingCode.value = false;
   }
 };
 
@@ -347,11 +373,14 @@ const checkPhoneRegistered = async () => {
 
     if (phoneUser.value && phoneUser.value.id) {
       isFirstLogin.value = false;
+      console.log("手机号已注册");
     } else {
       isFirstLogin.value = true;
+      console.log("手机号未注册，需要设置密码");
       showToast("手机号未注册，请设置密码");
     }
   } catch (error) {
+    console.error("检查手机号失败:", error);
     isFirstLogin.value = true;
   }
 };
@@ -369,12 +398,14 @@ const registerWithPhone = async () => {
 
     const res = await saveUserInfo(registerData);
     if (res.code === 1) {
-      showToast("注册成功");
+      showSuccessToast("注册成功");
       await doLogin({
         userName: registerData.userName,
         password: registerData.password,
         userType: registerData.userType,
       });
+    } else {
+      throw new Error(res.message || "注册失败");
     }
   } catch (error) {
     throw error;
@@ -424,7 +455,7 @@ const doLogin = async (loginForm) => {
         setCookie(loginForm.userName, loginForm.password, 7);
       }
 
-      showToast("登录成功");
+      showSuccessToast("登录成功");
 
       setTimeout(() => {
         router.push("/home");
@@ -440,11 +471,6 @@ const doLogin = async (loginForm) => {
 // 跳转注册
 const toRegister = () => {
   router.push("/register");
-};
-
-// 忘记密码
-const toForgetPassword = () => {
-  showToast("请联系管理员重置密码");
 };
 
 // Cookie操作

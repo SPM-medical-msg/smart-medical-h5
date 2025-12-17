@@ -9,6 +9,7 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
 export default defineConfig({
+  base: "/mobile/", // 这里是mobile
   plugins: [
     vue(),
     // Vant 自动按需引入

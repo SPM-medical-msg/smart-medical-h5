@@ -31,7 +31,7 @@
       <template #right>
         <!-- 未登录 -->
         <van-button
-          v-if="!userStore.userInfo"
+          v-if="!userStore.checkLogin()"
           size="small"
           type="primary"
           round
